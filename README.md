@@ -1,5 +1,13 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+## Live Demo & Desc
+
+https://joycecheen.github.io/hw01-fireball/
+
+![](https://github.com/joycecheen/hw01-fireball/blob/master/Screen%20Recording%202024-09-24%20at%2011.44.43%E2%80%AFPM%20(1).gif)
+
+In this project, I built off of the icosphere from HW00, creating a 3D animated fireball shape resembling the pokemon Gastly. Among the functions used in my code, I made use of smooth step, sin, cos waves, mix to lerp, and basic quadratic easing functions from the Toolbox Functions slides. For interactivity, I created adjustable variables for the colors of the gastly body and fire, speed of the fire sin noise, and the angle of the eyes on gastly's face. For extra spice, I made an animated background using fbm to create moving clouds.
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
