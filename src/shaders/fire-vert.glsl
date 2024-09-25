@@ -34,6 +34,7 @@ const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, whi
                                         //the geometry in the fragment shader.
 
 uniform int u_Time;
+uniform float u_Speed;
 
 // Generating FBM 3D code from CIS 4600
 float noise3D(vec3 p) {
@@ -69,11 +70,11 @@ float interpNoise3D(vec3 p) {
     return mix(j1, j2, fractZ);
 }
 
-float fbm(vec3 x, float baseFrequency) {
+float fbm(vec3 x, float f) {
     float total = 0.0;
     float persistence = 0.5;
     int octaves = 8;
-    float freq = baseFrequency;
+    float freq = f;
     float amp = 0.5;
 
     for (int i = 0; i < octaves; i++) {
@@ -86,13 +87,13 @@ float fbm(vec3 x, float baseFrequency) {
 }
 
 // modified from the book of shaders fractal brownian motion
-float superpositionSin(float value, float amplitude, float baseFrequency, float time) {
-    float t = -time * 0.2;
+float superpositionSin(float value, float amplitude, float frequency, float time) {
+    float t = -time * (u_Speed * 0.05);
     float result = 0.0;
-    result += sin(value * baseFrequency * 1.2 + t) * 1.0;
-    result += sin(value * baseFrequency * 1.7 + t * 1.2) * 0.8;
-    result += sin(value * baseFrequency * 2.1 + t * 0.5) * 1.5;
-    result += sin(value * baseFrequency * 2.7 + t * 1.8) * 0.6;
+    result += sin(value * frequency * 1.5 + t) * 0.8;
+    result += sin(value * frequency * 2.3 + t * 1.3) * 0.6;
+    result += sin(value * frequency * 3.7 + t * 1.7) * 0.8;
+    result += sin(value * frequency * 4.5 + t * 2.1) * 0.2;
     return amplitude * result * 0.1;
 }
 
@@ -120,20 +121,18 @@ void main()
     if (pos.y > 0.0) {
         pos *= vec3(1.0, 1.0 + 0.2 * pos.y, 1.0);
     }
-    // low freq, high amp displacement of sphere shape
+    
+    // low freq, high amp sin displacement of sphere shape
     float frequency = 2.5;
     float amplitude = 0.8; 
-    pos.x += superpositionSin(pos.y, amplitude, frequency, time);
-    // pos.z += superpositionSin(pos.y, amplitude, frequency, time);
+    pos.xz += superpositionSin(pos.y, amplitude, frequency, time);
     pos.xz -= 0.25 * pos.y;
 
     // high freq, low amp fbm texture distortion
     float fbmFrequency = 23.0;
     float fbmAmplitude = 0.12;
     float finerFBM = fbm(pos * fbmFrequency + vec3(time * 0.5), 0.5); 
-    pos.x += fbmAmplitude * finerFBM;
-    pos.z += fbmAmplitude * finerFBM;
-    pos.y += fbmAmplitude * finerFBM * 0.5;
+    pos.xyz += fbmAmplitude * finerFBM;
     
     modelposition = vec4(pos, 1.0);
 

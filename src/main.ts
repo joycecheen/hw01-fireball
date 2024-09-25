@@ -17,8 +17,11 @@ const controls = {
   'Body Color': [35, 20, 46],
   'Fire Color': [206, 0, 255],
   'Reset Scene': resetScene,
+  'Eye Angle': 0.7,
+  'Fire Speed': 2,
 };
 
+let square: Square;
 let fire: Icosphere;
 let body: Icosphere;
 let prevTesselations: number = 5;
@@ -28,12 +31,16 @@ function loadScene() {
   fire.create();
   body = new Icosphere(vec3.fromValues(0, 0.09, 0), 1, controls.tesselations);
   body.create();
+  square = new Square(vec3.fromValues(0, 0, 0));
+  square.create();
 }
 
 function resetScene() {
   controls.tesselations = 5;
-  controls['Body Color'] = [255, 0, 0];
-  controls['Fire Color'] = [255, 255, 0];
+  controls['Body Color'] = [35, 20, 46];
+  controls['Fire Color'] = [206, 0, 255];
+  controls['Eye Angle'] = 0.7;
+  controls['Fire Speed'] = 2;
   loadScene();
 }
 
@@ -54,6 +61,8 @@ function main() {
   gui.add(controls, 'Load Scene');
   gui.addColor(controls, 'Body Color');
   gui.addColor(controls, 'Fire Color');
+  gui.add(controls, 'Eye Angle', -3.14, 3.14).step(0.01);
+  gui.add(controls, 'Fire Speed', 1, 6).step(1);
   gui.add(controls, 'Reset Scene');
 
   // get canvas and webgl context
@@ -72,7 +81,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.071,0.188,0.298,1);
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -84,6 +93,10 @@ function main() {
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
+  ]);
+  const flat = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
   // This function will be called every frame
@@ -98,9 +111,19 @@ function main() {
       prevTesselations = controls.tesselations;
       fire = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       fire.create();
+      body = new Icosphere(vec3.fromValues(0, 0.09, 0), 1, controls.tesselations);
+      body.create();
     }
 
+    gl.disable(gl.DEPTH_TEST);
+    flat.setTime(time);
+    renderer.render(camera, flat, [
+      square,
+    ]);
+    gl.enable(gl.DEPTH_TEST);
+
     lambert.setGeometryColor(vec4.fromValues(controls['Body Color'][0] / 255, controls['Body Color'][1] / 255, controls['Body Color'][2] / 255, 1));
+    lambert.setEye(controls['Eye Angle']);
     lambert.setTime(time);
     renderer.render(camera, lambert, [
       body,
@@ -109,6 +132,7 @@ function main() {
     gl.depthMask(false);
     fireShader.setGeometryColor(vec4.fromValues(controls['Fire Color'][0] / 255, controls['Fire Color'][1] / 255, controls['Fire Color'][2] / 255, 1));
     fireShader.setTime(time);
+    fireShader.setSpeed(controls['Fire Speed']);
     renderer.render(camera, fireShader, [
       fire,
     ]);
